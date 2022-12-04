@@ -42,9 +42,6 @@ class GetPredictedResult(APIView):
             
         return JsonResponse(list, status=status.HTTP_201_CREATED,safe=False, json_dumps_params={'ensure_ascii': False})
 
-@receiver(pre_delete, sender=clipboard)
-def mymodel_delete(sender, instance, **kwargs):
-    instance.file.delete(False)
 
 class LaCayViewSet(viewsets.ModelViewSet):
     queryset=laThuoc.objects.all()
@@ -59,5 +56,12 @@ class ClipBoardViewSet(viewsets.ModelViewSet):
     queryset=clipboard.objects.all()
     serializer_class =ClipboardSerializer
 
+#signals
+@receiver(pre_delete, sender=clipboard)
+def mymodel_delete(sender, instance, **kwargs):
+    instance.file.delete(False)
 
+@receiver(pre_delete, sender=laThuoc)
+def mymodel_delete(sender, instance, **kwargs):
+    instance.hinhAnh.delete(False)
     

@@ -17,6 +17,7 @@ class laThuoc(models.Model):
     phanBo=models.TextField(null=True,blank=True)
     cachDung=models.TextField(null=True,blank=True)
     soLuongCon=models.IntegerField(null=False)
+    hinhAnh=models.ImageField(null=False,upload_to='lathuoc',default=None)
 
 class dieuTri(models.Model):
     maDieuTri=models.CharField(null=False,max_length=255)
