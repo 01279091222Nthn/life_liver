@@ -26,7 +26,8 @@ from django.conf.urls.static import static
 router=DefaultRouter()
 router.register('lathuoc',views.LaCayViewSet)
 router.register('benhgan',views.BenhGanViewSet)
-router.register('clipboard',views.ClipBoardViewSet)
+router.register('tintuc',views.TinTucViewSet)
+router.register('upload',views.UploadViewSet)
 
 schema_view = get_schema_view(
    openapi.Info(
@@ -43,11 +44,18 @@ schema_view = get_schema_view(
 
 
 urlpatterns = [
+    #special api
     path('admin/', admin.site.urls),
     path('predict/', views.GetPredictedResult.as_view()),
+    path('lathuoc/search/',views.searchLaThuoc),
+    path('dieutri/update/',views.capNhatDieuTri),
+    path('auth/sendotp/',views.sendOTP),
+    path('auth/verify/',views.verifyOTP),
+    path('tintuc/search/<str:input>/',views.searchTinTuc),
+    path('dieutri/<str:maLa>/',views.getDieuTri),
+    # path('cttintuc/matintuc/<str:maTinTuc>/',views.getCtTinTuc),
+    # path('lathuoc/mala/<str:mala>/',views.getCtLaThuoc),
+    #basic api
     path('',include(router.urls)),
     path('swagger', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
-]
-
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+]+static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
