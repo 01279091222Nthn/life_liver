@@ -7,6 +7,7 @@ from django.db.models.signals import pre_delete
 from django.dispatch.dispatcher import receiver
 from rest_framework.decorators import api_view
 from twilio.rest import Client
+from django.db import connection
 
 # import train model
 import matplotlib.pyplot as plt
@@ -23,7 +24,8 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.optimizers import Adam
 
 #import models
-from .models import laThuoc
+from .models import *
+from .models import dangNhap as modelDangNhap
 from .serializers import *
 
 # thư viện sử lý predict
@@ -35,7 +37,7 @@ import cv2
 
 
 class GetPredictedResult(APIView):
-    resnet_model = load_model('/Users/haidang/Downloads/resnet50_take2.model')
+    resnet_model = load_model('/Users/haidang/Downloads/resnet50_take5.model')
     class_names = ['An Xoa', 'Cà Gai Leo', 'Mã Đề', 'Sam Biển', 'Dây Thìa Canh', 'Đu Đủ',
                    'Lá Dâu Tầm', 'Lá Ô Liu', 'Lá Sen', 'Ngải Tía', 'Nghệ Xanh', 'Ngô', 'Trái Mấm', 'Xạ Đen']
 
@@ -77,83 +79,6 @@ def postDataTrain(request):
     for image in images:
         dataTrain.objects.create(label=folder_name, image=image)
 
-    
-    
-
-    
-
-    
-
-
-# @api_view(['POST'])
-# def TrainModelResnet50():
-#     img_height, img_width = 224, 224
-#     batch_size = 32
-
-#     dataset = tf.keras.preprocessing.image_dataset_from_directory(
-#     data_dir,
-#     labels='inferred',
-#     label_mode='categorical',
-#     class_names=None,
-#     color_mode='rgb',
-#     batch_size=32,
-#     image_size=(224, 224),
-#     shuffle=True,
-#     seed=123,
-#     validation_split=0.1,
-#     subset='training',
-#     interpolation='bilinear')
-
-#     test_data = tf.keras.preprocessing.image_dataset_from_directory(
-#     data_dir,
-#     labels='inferred',
-#     label_mode='categorical',
-#     class_names=None,
-#     color_mode='rgb',
-#     batch_size=32,
-#     image_size=(224, 224),
-#     shuffle=True,
-#     seed=123,
-#     validation_split=0.1,
-#     subset='validation',
-#     interpolation='bilinear')
-
-#     data_augmentation = tf.keras.Sequential([
-#     tf.keras.layers.experimental.preprocessing.RandomFlip("horizontal"),
-#     tf.keras.layers.experimental.preprocessing.RandomRotation(0.4),
-#     tf.keras.layers.experimental.preprocessing.RandomZoom(0.1)])
-
-#     # Apply data augmentation
-#     augmented_dataset = dataset.map(lambda x, y: (data_augmentation(x, training=True), y))
-
-#     # Split the dataset into training and validation sets
-#     train_data = augmented_dataset.take(np.floor(0.8 * len(dataset)).astype(int))
-#     val_data = augmented_dataset.skip(np.floor(0.8 * len(dataset)).astype(int))
-
-#     resnet_model = Sequential()
-
-#     pretrained_model= tf.keras.applications.ResNet50(include_top=False,input_shape=(224,224,3),pooling='avg',classes=14,weights='imagenet')
-
-#     for layer in pretrained_model.layers:
-#             layer.trainable=False
-
-#     resnet_model.add(pretrained_model)
-#     resnet_model.add(Flatten())
-#     resnet_model.add(Dense(512, activation='relu', kernel_regularizer=keras.regularizers.l2(0.001)))
-#     resnet_model.add(Dropout(0.3))
-#     resnet_model.add(Dense(256, activation='relu', kernel_regularizer=keras.regularizers.l2(0.001)))
-#     resnet_model.add(Dropout(0.3))
-#     resnet_model.add(Dense(14, activation='softmax'))
-
-#     resnet_model.summary()
-
-#     resnet_model.compile(optimizer=Adam(lr=0.001),loss='categorical_crossentropy',metrics=['accuracy'])
-
-#     model = resnet_model.fit(train_data,validation_data=val_data,epochs=10)
-
-#     resnet_model.save(path + 'resnet50.model')
-
-
 
 
 class LaCayViewSet(viewsets.ViewSet, generics.ListCreateAPIView, generics.RetrieveUpdateDestroyAPIView):
@@ -165,6 +90,7 @@ class LaCayViewSet(viewsets.ViewSet, generics.ListCreateAPIView, generics.Retrie
 class BenhGanViewSet(viewsets.ModelViewSet):
     queryset = benhGan.objects.all()
     serializer_class = BenhGanSerializer
+    lookup_field = 'maBenh'
 
 
 class TinTucViewSet(viewsets.ModelViewSet):
@@ -178,10 +104,24 @@ class UploadViewSet(viewsets.ModelViewSet):
     serializer_class = UploadSerializer
 
 
-class DonHangViewSet(viewsets.ModelViewSet, generics.ListAPIView):
+class DonHangViewSet(viewsets.ViewSet,generics.ListCreateAPIView,generics.UpdateAPIView):
     queryset = donHang.objects.all()
     serializer_class = DonHangSerializer
+    lookup_field = 'maDonHang'
 
+class KhachHangViewSet(viewsets.ViewSet,generics.CreateAPIView):
+    queryset = khachHang.objects.all()
+    serializer_class = KhachHangSerializer
+    lookup_field ='maKhachHang'
+
+@api_view(['POST'])
+def dangNhap(request):
+    maDangNhap = request.POST.get('maDangNhap')
+    matKhau = request.POST.get('matKhau')
+    if modelDangNhap.objects.filter(maDangNhap=maDangNhap,matKhau=matKhau).exists():
+        return Response(status=status.HTTP_200_OK)
+    else:
+        return Response(status=status.HTTP_404_NOT_FOUND)
 
 
 @api_view(['POST'])
@@ -238,7 +178,7 @@ def searchLaThuoc(request):
 
 @api_view(['GET'])
 def searchTinTuc(request, input):
-    tintuc = tinTuc.objects.filter(tieuDe__icontains=input)
+    tintuc = tinTuc.objects.filter(tieuDe__icontains=input).order_by('ngayDang')
     tintuc_serializer = TinTucSerializer(
         tintuc, many=True, context={"request": request})
     return Response(tintuc_serializer.data, status.HTTP_200_OK)
@@ -251,6 +191,8 @@ def getDieuTri(request, maLa):
     return Response(dieuTriSer.data, status=status.HTTP_200_OK)
 
 
+
+
 # Set environment variables for your credentials
 # Read more at http://twil.io/secure
 
@@ -258,7 +200,7 @@ def getDieuTri(request, maLa):
 def sendOTP(request):
     number = request.POST.get('number')
     account_sid = "ACc6abd338c8a37ba8e41c9084486dffb5"
-    auth_token = "8b2b3b0f1036c049246b34d008d36502"
+    auth_token = "5207ee86233e7cfb2d862aea01e5e308"
     verify_sid = "VA38abf9e9316fe448055603fb24135402"
     client = Client(account_sid, auth_token)
     client.verify.services(verify_sid).verifications.create(
@@ -272,7 +214,7 @@ def sendOTP(request):
 def verifyOTP(request):
     otp = request.POST.get('otp')
     account_sid = "ACc6abd338c8a37ba8e41c9084486dffb5"
-    auth_token = "8b2b3b0f1036c049246b34d008d36502"
+    auth_token = "5207ee86233e7cfb2d862aea01e5e308"
     verify_sid = "VA38abf9e9316fe448055603fb24135402"
     client = Client(account_sid, auth_token)
     print(otp)
@@ -282,20 +224,53 @@ def verifyOTP(request):
     )
     return Response(status=status.HTTP_200_OK)
 
-# @api_view(['GET'])
-# def getCtTinTuc(request, maTinTuc):
-#     cttintuc = ctTinTuc.objects.filter(maCTTinTuc=maTinTuc).order_by('viTri')
-#     serializers = CTTinTucSerializer(cttintuc, many=True, context={"request": request})
-#     return Response(serializers.data, status=status.HTTP_201_CREATED)
+@api_view(['POST'])
+def postCTDonHang(request):
+    maDon = request.POST.get('maDonHang')
+    sls = request.POST.getlist('soLuong[]')
+    maLas = request.POST.getlist('maLa[]')
+    i=0
+    for maLa in maLas:
+        cursor=connection.cursor()
+        cursor.execute(
+            """
+            UPDATE module_lathuoc SET soLuongCon=soLuongCon-%s WHERE maLa=%s
+            """
+        ,[sls[i],maLa])
+        
+        ctDonHang.objects.create(maCTDonHang=maDon, maLa=maLa, soLuong=sls[i])
+        i+=1
+    return Response(status=status.HTTP_200_OK)
+    
+@api_view(['GET'])
+def getCTDonHang(request,maDonHang):
+    dh=donHang.objects.get(maDonHang=maDonHang)
+    dh= DonHangSerializer(dh)
+    ctdh=ctDonHang.objects.filter(maCTDonHang=maDonHang)
+    ctdh= CTDonHangSerializer(ctdh,many=True,context={"request": request})
+    kh=khachHang.objects.get(maKhachHang=maDonHang)
+    kh=KhachHangSerializer(kh)
+    donhang={
+        'DonHang':dh.data,
+        'CTDonHang':ctdh.data,
+        'KhachHang':kh.data,
+    }
+    return Response(donhang,status=status.HTTP_200_OK)
 
-# @api_view(['GET'])
-# def getCtLaThuoc(request, mala):
-#     lathuoc = laThuoc.objects.get(maLa=mala)
-#     lathuoc = LaCaySerializer(lathuoc, context={"request": request})
-#     ctla=ctLaThuoc.objects.filter(maCTLa=mala).order_by('viTri')
-#     ctla=CTLaCaySerializer(ctla,many=True, context={"request": request})
-#     return Response({'lathuoc':lathuoc.data,'ctlathuoc':ctla.data}, status=status.HTTP_201_CREATED)
-
+@api_view(['DELETE'])
+def deleteDonHang(request, maDonHang):
+    donHang.objects.filter(maDonHang=maDonHang).delete()
+    ctDonHang.objects.filter(maCTDonHang=maDonHang).delete()
+    khachHang.objects.filter(maKhachHang=maDonHang).delete()
+    cursor=connection.cursor()
+    cursor.execute(
+        """
+            UPDATE module_lathuoc 
+            SET module_lathuoc.soLuongCon=module_lathuoc.soLuongCon+(SELECT module_ctdonhang.soLuong FROM module_lathuoc, module_ctdonhang WHERE module_lathuoc.maLa = module_ctdonhang.maLa AND module_ctdonhang.maCTDonHang=%s)
+            WHERE module_lathuoc.maLa=(SELECT module_lathuoc.maLa FROM module_lathuoc, module_ctdonhang WHERE module_lathuoc.maLa = module_ctdonhang.maLa AND module_ctdonhang.maCTDonHang=%s);
+        """
+    ,[maDonHang,maDonHang])
+    return Response(status=status.HTTP_200_OK)
 
 # signals
 @receiver(pre_delete, sender=clipboard)
