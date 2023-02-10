@@ -33,6 +33,7 @@ class tinTuc(models.Model):
     noiDungKhac=models.TextField(null=True,blank=True)
 
 class khachHang(models.Model):
+    maKhachHang=models.CharField(null=False,max_length=255)
     soDienThoai=models.CharField(null=False,max_length=255)
     tenKhachHang=models.CharField(null=False,max_length=255)
     diaChi=models.TextField(null=False)
@@ -44,6 +45,7 @@ class donHang(models.Model):
     ngayLap=models.DateTimeField(null=False)
     tongTien=models.IntegerField(null=False,default=0)
     trangThai=models.IntegerField(null=False,default=0)
+    ghiChu=models.TextField(null=True,blank=True)
     
 class ctDonHang(models.Model):
     maCTDonHang=models.CharField(null=False,max_length=255)

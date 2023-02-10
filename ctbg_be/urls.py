@@ -28,6 +28,8 @@ router.register('lathuoc',views.LaCayViewSet)
 router.register('benhgan',views.BenhGanViewSet)
 router.register('tintuc',views.TinTucViewSet)
 router.register('upload',views.UploadViewSet)
+router.register('khachhang',views.KhachHangViewSet)
+router.register('donhang',views.DonHangViewSet)
 
 schema_view = get_schema_view(
    openapi.Info(
@@ -53,6 +55,10 @@ urlpatterns = [
     path('auth/verify/',views.verifyOTP),
     path('tintuc/search/<str:input>/',views.searchTinTuc),
     path('dieutri/<str:maLa>/',views.getDieuTri),
+    path('ctdonhang/',views.postCTDonHang),
+    path('ctdonhang/get/<str:maDonHang>/',views.getCTDonHang),
+    path('donhang/delete/<str:maDonHang>/',views.deleteDonHang),
+    path('dangnhap/',views.dangNhap),
     # path('cttintuc/matintuc/<str:maTinTuc>/',views.getCtTinTuc),
     # path('lathuoc/mala/<str:mala>/',views.getCtLaThuoc),
     #basic api

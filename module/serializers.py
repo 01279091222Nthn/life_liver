@@ -9,7 +9,7 @@ class LaCaySerializer(serializers.ModelSerializer):
 class BenhGanSerializer(serializers.ModelSerializer):
     class Meta:
         model=benhGan
-        fields=('maBenh','tenBenh','hinhAnh')
+        fields=('__all__')
 
 class ClipboardSerializer(serializers.ModelSerializer):
     class Meta:
@@ -29,15 +29,24 @@ class TinTucSerializer(serializers.ModelSerializer):
 class DonHangSerializer(serializers.ModelSerializer):
     class Meta:
         model=donHang
-        fields=('maDonHang','maKhachHang','ngayLap')
+        fields=('__all__')
 
+class KhachHangSerializer(serializers.ModelSerializer):
+    class Meta:
+        model=khachHang
+        fields = ('__all__') 
 
 class CTDonHangSerializer(serializers.ModelSerializer):
     class Meta:
         model=ctDonHang
-        fields=('maCTDonHang','maLa','soLuong')
+        fields=('__all__')
 
 class DieuTriSerializer(serializers.ModelSerializer):
     class Meta:
         model=dieuTri
         fields=('maLa','maBenh')
+
+class DangNhapSerializer(serializers.ModelSerializer):
+    class Meta:
+        model=dangNhap
+        fields=('__all__')
